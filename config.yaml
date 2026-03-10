@@ -3,5 +3,5 @@ paths:
   test_path: "data/testDATA.csv"
 
 params:
-  lr: 0.01
-  n_iters: 10000
+  lr: 0.001
+  n_iters: 100000

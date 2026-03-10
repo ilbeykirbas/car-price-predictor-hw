@@ -24,7 +24,7 @@ class LinearRegression:
             self.loss_history.append(loss)
 
             # Convergence Rule - Loss Difference
-            if i > 0 and abs(self.loss_history[-2] - self.loss_history[-1]) < 1e-6:
+            if i > 0 and abs(self.loss_history[-2] - self.loss_history[-1]) < self.learning_rate * 1e-5:
                 print(f"\nConverged at iteration {i}\n")
                 break
 
