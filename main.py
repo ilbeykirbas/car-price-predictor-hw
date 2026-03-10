@@ -13,7 +13,8 @@ def main():
     X_train, y_train, X_test, y_test, scaler = run_preprocessing(config)
     
     print("Initializing model...\n")
-    model = LinearRegression()
+    params = config["params"]
+    model = LinearRegression(lr=params["lr"], n_iters=params["n_iters"])
     
     print("Training has started")
     model = train_model(model, X_train, y_train)

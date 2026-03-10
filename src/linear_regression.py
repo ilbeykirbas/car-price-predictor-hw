@@ -1,9 +1,9 @@
 import numpy as np
 
 class LinearRegression:
-    def __init__(self, lr=0.01, n_iter=1000):
+    def __init__(self, lr=0.01, n_iters=1000):
         self.learning_rate = lr
-        self.num_iterations = n_iter
+        self.num_iterations = n_iters
         self.weights = None
         self.bias = None
         self.loss_history = [] 
@@ -22,6 +22,11 @@ class LinearRegression:
 
             loss = np.mean(error ** 2)
             self.loss_history.append(loss)
+
+            # Convergence Rule - Loss Difference
+            if i > 0 and abs(self.loss_history[-2] - self.loss_history[-1]) < 1e-6:
+                print(f"\nConverged at iteration {i}\n")
+                break
 
             dw = (2 / n_samples) * np.matmul(X.T, error)
             db = (2 / n_samples) * np.sum(error)

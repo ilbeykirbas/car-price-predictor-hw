@@ -1,7 +1,18 @@
 import pandas as pd
 import numpy as np
 import os
-from src.scaler import StandardScaler
+from src.scaler import MinMaxScaler
+
+def remove_outliers(df, column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    
+    # Sınırlar içinde kalan veriyi döndür
+    return df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
 def run_preprocessing(config):
     # 1. Kaynak Dosyaların Varlığını Kontrol Et
@@ -17,6 +28,9 @@ def run_preprocessing(config):
     X_test = pd.read_csv(test_path)
 
     # 3. Temizlik ve Özellik Mühendisliği (Aynı Mantık)
+    for col in ["km_driven", "selling_price"]:
+        X_train = remove_outliers(X_train, col)
+        
     X_train = X_train.drop('name', axis=1)
     X_test = X_test.drop('name', axis=1)
 
@@ -31,6 +45,20 @@ def run_preprocessing(config):
     X_train = X_train.drop('year', axis=1)
     X_test = X_test.drop('year', axis=1)
 
+    # Yeni Özellikleri Ekle (Hem Train hem Test için!)
+    for df in [X_train, X_test]:
+        # Etkileşim Terimi: Yaş ve KM arasındaki ilişki
+        df["interaction"] = df["car_age"] * df["km_driven"]
+        
+        # Polinomsal Terim: Aracın yaşının karesi (Fiyat düşüşü doğrusal değildir)
+        df["car_age_squared"] = df["car_age"] ** 2
+
+    # NaN Önlemi: Eğer çarpım sonucu sonsuz değer oluşursa bunları temizle
+    X_train.replace([np.inf, -np.inf], np.nan, inplace=True)
+    X_test.replace([np.inf, -np.inf], np.nan, inplace=True)
+    X_train.fillna(0, inplace=True)
+    X_test.fillna(0, inplace=True)
+
     # 4. Kategorik Değişkenler ve One-Hot Encoding
     X_train['is_train'] = 1
     X_test['is_train'] = 0
@@ -42,21 +70,20 @@ def run_preprocessing(config):
     X_train = combined_df[combined_df['is_train'] == 1].drop('is_train', axis=1)
     X_test = combined_df[combined_df['is_train'] == 0].drop('is_train', axis=1)
 
+    y_train = np.log1p(y_train)
+    y_test = np.log1p(y_test)
+
     # 5. Ölçeklendirme (Scaling)
-    x_scaler = StandardScaler()
-    y_scaler = StandardScaler()
+    x_scaler = MinMaxScaler()
+    y_scaler = MinMaxScaler()
 
-    cols_to_scale = X_train.columns
+    X_train = x_scaler.fit_transform(X_train)
+    X_test = x_scaler.transform(X_test)
 
-    X_train[cols_to_scale] = x_scaler.fit_transform(X_train[cols_to_scale])
-    X_test[cols_to_scale] = x_scaler.transform(X_test[cols_to_scale])
+    y_train = y_scaler.fit_transform(y_train)
+    y_test = y_scaler.transform(y_test) 
 
-    y_train_scaled = y_scaler.fit_transform(y_train)
-    y_test_scaled = y_scaler.transform(y_test) 
-
-    X_train = X_train.to_numpy()
-    X_test = X_test.to_numpy()
-    y_train_scaled = np.array(y_train_scaled).reshape(-1, 1)
-    y_test_scaled = np.array(y_test_scaled).reshape(-1, 1)
-
-    return X_train, y_train_scaled, X_test, y_test_scaled, y_scaler
+    y_train = y_train.reshape(-1, 1)
+    y_test = y_test.reshape(-1, 1)
+    
+    return X_train, y_train, X_test, y_test, y_scaler
