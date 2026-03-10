@@ -59,4 +59,4 @@ def run_preprocessing(config):
     y_train_scaled = np.array(y_train_scaled).reshape(-1, 1)
     y_test_scaled = np.array(y_test_scaled).reshape(-1, 1)
 
-    return X_train,  y_train_scaled, X_test, y_test_scaled, y_scaler
+    return X_train, y_train_scaled, X_test, y_test_scaled, y_scaler

@@ -5,21 +5,27 @@ class StandardScaler:
         self.mean_ = None
         self.std_ = None
 
-    def fit(self, y):
-        y = np.array(y).reshape(-1)
-        self.mean_ = np.mean(y)
-        self.std_ = np.std(y)
-        if self.std_ == 0:
-            self.std_ = 1
+    def fit(self, data):
+        data = self._check_ndim(np.array(data))
+
+        self.mean_ = np.mean(data, axis=0)  # sütun bazlı
+        self.std_ = np.std(data, axis=0)
+        self.std_[self.std_ == 0] = 1
         return self
 
-    def transform(self, y):
-        y = np.array(y).reshape(-1)
-        return (y - self.mean_) / self.std_
+    def transform(self, data):
+        data = self._check_ndim(np.array(data))
+        return (data - self.mean_) / self.std_
+    
+    def fit_transform(self, data):
+        return self.fit(data).transform(data)
 
-    def fit_transform(self, y):
-        return self.fit(y).transform(y)
-
-    def inverse_transform(self, y_scaled):
-        y_scaled = np.array(y_scaled).reshape(-1)
-        return (y_scaled * self.std_) + self.mean_
+    def inverse_transform(self, data):
+        data = self._check_ndim(np.array(data))
+        return (data * self.std_) + self.mean_
+    
+    def _check_ndim(self, data):
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+        
+        return data

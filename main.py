@@ -22,7 +22,11 @@ def main():
 
     print("Evaluating model...\n")
     test_model(model, X_test, y_test, scaler)
-    print("Evaluation completed!")
+
+    print("\nLast 5 loss:", model.loss_history[-5:])
+    print("\nFirst 5 loss:", model.loss_history[:5])
+
+    print("\nEvaluation completed!")
     
 if __name__ == "__main__":
     main()
